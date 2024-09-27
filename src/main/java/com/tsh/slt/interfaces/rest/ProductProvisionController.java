@@ -2,6 +2,7 @@ package com.tsh.slt.interfaces.rest;
 
 
 import com.tsh.slt.interfaces.util.ApMessageList;
+import com.tsh.slt.spec.ProvInstallInfoRepIvo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -24,10 +25,20 @@ import java.nio.file.Paths;
 public class ProductProvisionController {
 
 
-    @GetMapping(ApMessageList.PROV_INSTALL_VER_REQ)
-    public ResponseEntity<String> execute(){
+    @GetMapping(ApMessageList.PROV_INSTALL_INFO_REQ)
+    public ResponseEntity<ProvInstallInfoRepIvo> execute(){
         // TODO DB 조회하여 버전정보 리턴, 현재는 하드코딩
-        return new ResponseEntity<>("1.0.0", HttpStatus.OK);
+
+        ProvInstallInfoRepIvo rep = new ProvInstallInfoRepIvo();
+        ProvInstallInfoRepIvo.Body body = new ProvInstallInfoRepIvo.Body();
+        body.setVersion("1.0.0");
+        body.setServicePort("15001");
+        body.setSatellitePort("16001");
+        rep.setBody(body);
+
+        log.info("Response {}", rep.toString());
+
+        return new ResponseEntity<>(rep, HttpStatus.OK);
     }
 
     @GetMapping(ApMessageList.PROV_INSTALL_FILE_REQ)
