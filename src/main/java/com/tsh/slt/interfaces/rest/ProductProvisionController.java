@@ -3,6 +3,7 @@ package com.tsh.slt.interfaces.rest;
 
 import com.tsh.slt.interfaces.util.ApMessageList;
 import com.tsh.slt.spec.ProvInstallInfoRepIvo;
+import com.tsh.slt.spec.common.ProvInstallFileType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -34,6 +35,7 @@ public class ProductProvisionController {
         body.setVersion("1.0.0");
         body.setServicePort("15001");
         body.setSatellitePort("16001");
+        body.setJavaOptions("-Xms512m -Xmx1024m");
         rep.setBody(body);
 
         log.info("Response {}", rep.toString());
@@ -42,19 +44,43 @@ public class ProductProvisionController {
     }
 
     @GetMapping(ApMessageList.PROV_INSTALL_FILE_REQ)
-    public ResponseEntity<byte[]> execute(@RequestParam(value = "type") String type) throws Exception {
+    public ResponseEntity<byte[]> execute(@RequestParam(value = "type") ProvInstallFileType type) throws Exception {
 
+        // TODO 테스트 대응, 프로젝트 내부 경로 사용
         try{
-            // TODO 테스트 대응, 프로젝트 내부 경로 사용
-            Path path = Paths.get(new ClassPathResource("static/stl.server-0.0.1-SNAPSHOT.jar").getURI());
-            byte[] fileBytes = Files.readAllBytes(path);
+            Path path = null;
+            String attachmentName = null;
+            switch (type){
+                case PROP:
+                    path = Paths.get(new ClassPathResource("static/application.yml").getURI());
+                    attachmentName = "application.yml";
+                    break;
+
+                case JAVA:
+                    path = Paths.get(new ClassPathResource("static/java-1.8.0-openjdk-1.8.0.332-1.b09.ojdkbuild.windows.x86_64.zip").getURI());
+                    attachmentName = "java.zip";
+                    break;
+                case JAR:
+                    path = Paths.get(new ClassPathResource("static/stl.server-0.0.1-SNAPSHOT.jar").getURI());
+                    attachmentName = "service.jar";
+                    break;
+
+                case DATA:
+                    path = Paths.get(new ClassPathResource("static/data.sqlite3").getURI());
+                    attachmentName = "data.sqlite3";
+                    break;
+
+                default:
+                    break;
+
+            }
 
             // 응답 헤더 설정
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);  // 바이너리 데이터
-            headers.setContentDispositionFormData("attachment", "service.jar"); // 다운로드 되는 파일 이름 설정
+            headers.setContentDispositionFormData("attachment", attachmentName); // 다운로드 되는 파일 이름 설정
 
-            return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
+            return new ResponseEntity<>(Files.readAllBytes(path), headers, HttpStatus.OK);
 
         }catch (IOException ioErr){
 
